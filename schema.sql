@@ -1,93 +1,115 @@
 use vk;
 
-DROP TABLE IF EXISTS users;
-CREATE TABLE users (
-	id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	first_name VARCHAR(100) NOT NULL,
-	last_name VARCHAR(100) NOT NULL,
-	email VARCHAR(100) NOT NULL UNIQUE,
-	phone VARCHAR(100) NOT NULL UNIQUE,
-	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-	update_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+desc users;
+select * from users;
+-- добавляем поле username
+alter table users add username varchar(100) not null after id;
+-- заполняем поле username значениями
+update users set username = concat(
+	lower(last_name),
+	floor((1 + rand()) * 100)  
 );
 
-DROP TABLE IF EXISTS profiles;
-CREATE TABLE profiles (
-	user_id INT UNSIGNED NOT NULL PRIMARY KEY,
-	gender ENUM('m', 'w') NOT NULL,
-	city VARCHAR(100) NOT NULL,
-	country VARCHAR(100) NOT NULL,
-	last_login DATETIME,
-	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-	update_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP 
-);
 
-DROP TABLE IF EXISTS messages;
-CREATE TABLE messages (
-	id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	from_user_id INT UNSIGNED NOT NULL,
-	to_user_id INT UNSIGNED NOT NULL,
-	body TEXT NOT NULL,
-	is_imprtant BOOLEAN,
-	is_delivered BOOLEAN,
-	created_at DATETIME DEFAULT NOW()
-);
+desc profiles;
+select * from profiles;
+-- обновляем значения полей update_at, last_login 
+update profiles set update_at = now() where update_at < created_at;
+update profiles set last_login = now() where last_login < created_at;
 
-DROP TABLE IF EXISTS friendship;
-CREATE TABLE friendship (
-	user_id INT UNSIGNED NOT NULL,
-	friend_id INT UNSIGNED NOT NULL,
-	status_id INT UNSIGNED NOT NULL,
-	requested_at DATETIME DEFAULT NOW(),
-	confirmed_at DATETIME,
-	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-	update_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	PRIMARY KEY(user_id, friend_id)
-);
 
-DROP TABLE IF EXISTS friendship_statuses ;
-CREATE TABLE friendship_statuses (
-	id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	name VARCHAR(150) NOT NULL UNIQUE,
-	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-	update_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP 
-);
+desc messages;
+select * from messages;
+-- устанавливаем рандомные значения для полей from_user_id, to_user_id
+update messages set 
+	from_user_id = floor(1 + rand() * 100), 
+ 	to_user_id = floor(1 + rand() * 100);
 
-DROP TABLE IF EXISTS communities;
-CREATE TABLE communities (
-	id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	name VARCHAR(150) NOT NULL UNIQUE,
-	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-	update_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) comment 'grupps';
-
-DROP TABLE IF EXISTS communities_users;
-CREATE TABLE communities_users (
-	user_id INT UNSIGNED NOT NULL,
-	community_id INT UNSIGNED NOT NULL,
-	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-	PRIMARY KEY (user_id, community_id)	
+ 
+desc media;
+select * from media;
+-- устанавливаем рандомное значение для поля user_id
+update media set user_id = floor(1 + rand() * 100);
+-- создаем временную таблицу со значениями расширений файлов
+create temporary table file (name tinytext);
+insert into file values
+	('avi'), 
+	('mp3'),
+	('mpeg4'),
+	('jpeg'),
+	('png');
+-- изменяем значения поля filename
+update media set filename = concat(
+	'http://dropbox.com/vk/',
+	'filename',
+	'.',
+	(select name from file order by rand() limit 1));
+-- изменяем невалидные значения поля size
+update media set size = floor(1 + rand() * 10000) where size <= 1000;
+-- устанавливаем данные в JSON формате для поля metadata
+update media set metadata = concat( 
+	'{"owner": "',
+	(select concat(first_name, " ", last_name) from users where id = media.user_id),
+	'"}'
 );
+-- устанавливаем валидные значения для поля media_type_id
+update media set media_type_id = floor(1 + rand() * 4);
 
-DROP TABLE IF EXISTS media;
-CREATE TABLE media (
-	id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	user_id INT UNSIGNED NOT NULL,
-	filename VARCHAR(255) NOT null UNIQUE,
-	size INT UNSIGNED NOT NULL,
-	metadata JSON,
-	media_type_id INT UNSIGNED NOT NULL,
-	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-	update_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
 
-DROP TABLE IF EXISTS media_types;
-CREATE TABLE media_types (
-	id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	name VARCHAR(150) NOT NULL UNIQUE,
-	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-	update_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+desc media_types;
+select * from media_types;
+-- удаляем данные из таблицы media_types
+delete from media_types;
+-- обнавляем данные таблицы media_types для поля name
+insert into media_types (name) values
+	('photo'),
+	('video'),
+	('audio'),
+	('image');
+truncate media_types;
+
+
+desc friendship;
+select * from friendship;
+-- удаляем поле requested_at
+alter table friendship drop column requested_at;
+-- устанавливаем рандомные значения для полей friend_id, user_id
+update friendship set
+	friend_id = floor(1 + rand() * 100),
+	user_id = floor(1 + rand() * 100);
+-- устанавливаем валидные значения ждя поля status_id
+update friendship set status_id = floor(1 + rand() * 3);
+-- валидируем даты в поле confirmed_at
+update friendship set confirmed_at = now() where confirmed_at < created_at;
+
+
+desc friendship_statuses;
+select * from friendship_statuses;
+-- сбрасываем данные в таблице friendship_statuses
+truncate friendship_statuses;
+-- удаляем за ненадобностью поля created_at, update_at
+alter table friendship_statuses drop column created_at;
+alter table friendship_statuses drop column update_at;
+-- устанавливаем значения статуса в поле name
+insert into friendship_statuses (name) values
+	('requested'),
+	('confirmed'),
+	('regected');
+
+
+desc communities;
+select * from communities;
+-- уменьшаем количество групп до 20
+delete from communities where id > 20;
+-- исправляем невалидные значения даты в поле update_at
+update communities set update_at = now() where update_at < created_at;
+
+
+desc communities_users;
+select * from communities_users;
+-- устанавливаем валидные значения в поле community_id
+update communities_users set community_id = floor(1 + rand() * 20);
+
 
 
 
