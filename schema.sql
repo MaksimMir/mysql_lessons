@@ -2,9 +2,9 @@ use vk;
 
 desc users;
 select * from users;
--- добавляем поле username
+-- Р”РѕР±Р°РІР»СЏРµРј РїРѕР»Рµ username
 alter table users add username varchar(100) not null after id;
--- заполняем поле username значениями
+-- РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј Р·РЅР°С‡РµРЅРёСЏ РІ РїРѕР»Рµ username
 update users set username = concat(
 	lower(last_name),
 	floor((1 + rand()) * 100)  
@@ -13,14 +13,14 @@ update users set username = concat(
 
 desc profiles;
 select * from profiles;
--- обновляем значения полей update_at, last_login 
+-- Р’Р°Р»РёРґРёСЂСѓРµРј Р·РЅР°С‡РµРЅРёСЏ РґР°С‚ РІ РїРѕР»СЏС… update_at, last_login 
 update profiles set update_at = now() where update_at < created_at;
 update profiles set last_login = now() where last_login < created_at;
 
 
 desc messages;
 select * from messages;
--- устанавливаем рандомные значения для полей from_user_id, to_user_id
+-- РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЂР°РЅРґРѕРјРЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ РІ РїРѕР»СЏ from_user_id, to_user_id
 update messages set 
 	from_user_id = floor(1 + rand() * 100), 
  	to_user_id = floor(1 + rand() * 100);
@@ -28,9 +28,9 @@ update messages set
  
 desc media;
 select * from media;
--- устанавливаем рандомное значение для поля user_id
+-- РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЂР°РЅРґРѕРјРЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ РІ РїРѕР»Рµ user_id
 update media set user_id = floor(1 + rand() * 100);
--- создаем временную таблицу со значениями расширений файлов
+-- РЎРѕР·РґР°РµРј РІСЂРµРјРµРЅРЅСѓСЋ С‚Р°Р±Р»РёС†Сѓ РґР»СЏ СЂР°СЃС€РёСЂРµРЅРёР№ С„Р°Р№Р»РѕРІ
 create temporary table file (name tinytext);
 insert into file values
 	('avi'), 
@@ -38,29 +38,29 @@ insert into file values
 	('mpeg4'),
 	('jpeg'),
 	('png');
--- изменяем значения поля filename
+-- РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј РґР°РЅРЅС‹Рµ РІ РїРѕР»Рµ filename
 update media set filename = concat(
 	'http://dropbox.com/vk/',
 	'filename',
 	'.',
 	(select name from file order by rand() limit 1));
--- изменяем невалидные значения поля size
+-- СѓСЃС‚Р°РЅР°РІР»РёРІР°РµРј РІР°Р»РёРґРЅС‹Рµ РґР°РЅРЅС‹Рµ РІ РїРѕР»Рµ size
 update media set size = floor(1 + rand() * 10000) where size <= 1000;
--- устанавливаем данные в JSON формате для поля metadata
+-- РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј РґР°РЅРЅС‹Рµ РІ JSON С„РѕСЂРјР°С‚Рµ РґР»СЏ РїРѕР»СЏ metadata
 update media set metadata = concat( 
 	'{"owner": "',
 	(select concat(first_name, " ", last_name) from users where id = media.user_id),
 	'"}'
 );
--- устанавливаем валидные значения для поля media_type_id
+-- РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј РІР°Р»РёРґРЅС‹Рµ РґР°РЅРЅС‹Рµ РІ РїРѕР»Рµ media_type_id
 update media set media_type_id = floor(1 + rand() * 4);
 
 
 desc media_types;
 select * from media_types;
--- удаляем данные из таблицы media_types
+-- РЈРґР°Р»СЏРµРј РґР°РЅРЅС‹Рµ РёР· С‚Р°Р±Р»РёС†С‹ media_types
 delete from media_types;
--- обнавляем данные таблицы media_types для поля name
+-- РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј РґР°РЅРЅС‹Рµ РІ С‚Р°Р±Р»РёС†Сѓ media_types РІ РїРѕР»Рµ name
 insert into media_types (name) values
 	('photo'),
 	('video'),
@@ -71,26 +71,26 @@ truncate media_types;
 
 desc friendship;
 select * from friendship;
--- удаляем поле requested_at
+-- РЈРґР°Р»СЏРµРј РїРѕР»Рµ requested_at
 alter table friendship drop column requested_at;
--- устанавливаем рандомные значения для полей friend_id, user_id
+-- РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЂР°РЅРґРѕРјРЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ РІ РїРѕР»СЏ friend_id, user_id
 update friendship set
 	friend_id = floor(1 + rand() * 100),
 	user_id = floor(1 + rand() * 100);
--- устанавливаем валидные значения ждя поля status_id
+-- РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј РІР°Р»РёРґРЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ РІ РїРѕР»Рµ status_id
 update friendship set status_id = floor(1 + rand() * 3);
--- валидируем даты в поле confirmed_at
+-- Р’Р°Р»РёРґРёСЂСѓРµРј РґР°С‚С‹ РІ РїРѕР»Рµ confirmed_at
 update friendship set confirmed_at = now() where confirmed_at < created_at;
 
 
 desc friendship_statuses;
 select * from friendship_statuses;
--- сбрасываем данные в таблице friendship_statuses
+-- РЈРґР°Р»СЏРµРј РґР°РЅРЅС‹Рµ РёР· С‚Р°Р±Р»РёС†С‹ friendship_statuses
 truncate friendship_statuses;
--- удаляем за ненадобностью поля created_at, update_at
+-- РЈРґР°Р»СЏРµРј Р·Р° РЅРµРЅР°РґРѕР±РЅРѕСЃС‚СЊСЋ РїРѕР»СЏ created_at, update_at
 alter table friendship_statuses drop column created_at;
 alter table friendship_statuses drop column update_at;
--- устанавливаем значения статуса в поле name
+-- РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј Р·РЅР°С‡РµРЅРёСЏ СЃС‚Р°С‚СѓСЃРѕРІ РІ РїРѕР»Рµ name
 insert into friendship_statuses (name) values
 	('requested'),
 	('confirmed'),
@@ -99,15 +99,15 @@ insert into friendship_statuses (name) values
 
 desc communities;
 select * from communities;
--- уменьшаем количество групп до 20
+-- РЈРјРµРЅСЊС€Р°РµРј РєРѕР»РёС‡РµСЃС‚РІРѕ РіСЂСѓРїРї РґРѕ 20
 delete from communities where id > 20;
--- исправляем невалидные значения даты в поле update_at
+-- Р’Р°Р»РёРґРёСЂСѓРµРј Р·РЅР°С‡РµРЅРёРµ РґР°С‚С‹ РІ РїРѕР»Рµ update_at
 update communities set update_at = now() where update_at < created_at;
 
 
 desc communities_users;
 select * from communities_users;
--- устанавливаем валидные значения в поле community_id
+-- РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј РІР°Р»РёРґРЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ РІ РїРѕР»Рµ community_id
 update communities_users set community_id = floor(1 + rand() * 20);
 
 
