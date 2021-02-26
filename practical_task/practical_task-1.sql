@@ -56,15 +56,17 @@ ALTER TABLE users_two MODIFY update_at datetime DEFAULT current_timestamp
 
 	
 -- 2 
-SELECT * FROM storehouses_products ORDER BY (value = 0);
+SELECT * FROM storehouses_products ORDER BY if(value > 0, 0, 1), value;
+SELECT * FROM storehouses_products ORDER BY value = 0, value;
 
 -- 3 
 SELECT * FROM users WHERE substring(birthday_at, 6, 2) = 05 OR substring(birthday_at, 6, 2) = 07;
+SELECT * FROM users WHERE date_format(birthday_at, '%M') IN ('may', 'august');
 
 -- 5	
 DESC catalogs;
 SELECT * FROM catalogs;
-SELECT * FROM catalogs WHERE id IN (5, 1, 2) ORDER BY (id < 5);
+SELECT * FROM catalogs WHERE id IN (5, 1, 2) ORDER BY field(id, 5, 1, 2);
 
 
 
