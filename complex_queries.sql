@@ -1,25 +1,25 @@
 USE vk;
 
--- 1 Определить кто больше поставил лайков (всего) - мужчины или женщины?
+-- 1 РћРїСЂРµРґРµР»РёС‚СЊ РєС‚Рѕ Р±РѕР»СЊС€Рµ РїРѕСЃС‚Р°РІРёР» Р»Р°Р№РєРѕРІ (РІСЃРµРіРѕ) - РјСѓР¶С‡РёРЅС‹ РёР»Рё Р¶РµРЅС‰РёРЅС‹?
 SELECT (SELECT gender FROM profiles WHERE user_id = users.id) AS sex,
 	count(*) AS total_likes
 	FROM users WHERE id in(SELECT user_id FROM likes GROUP BY user_id)
 	GROUP BY sex
 	ORDER BY total_likes;
 
--- 2 Подсчитать количество лайков которые получили 10 самых молодых пользователей.
+-- 2 РџРѕРґСЃС‡РёС‚Р°С‚СЊ РєРѕР»РёС‡РµСЃС‚РІРѕ Р»Р°Р№РєРѕРІ РєРѕС‚РѕСЂС‹Рµ РїРѕР»СѓС‡РёР»Рё 10 СЃР°РјС‹С… РјРѕР»РѕРґС‹С… РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№.
 SELECT TIMESTAMPDIFF(YEAR, birthday, NOW()) AS age FROM profiles WHERE user_id  
 	IN(SELECT target_id FROM likes WHERE target_type_id = 
 	(SELECT id FROM target_types WHERE name = 'users'))
 	ORDER BY age LIMIT 10;
 
--- 3 Найти 10 пользователей, которые проявляют наименьшую активность в
--- использовании социальной сети.
+-- 3 РќР°Р№С‚Рё 10 РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№, РєРѕС‚РѕСЂС‹Рµ РїСЂРѕСЏРІР»СЏСЋС‚ РЅР°РёРјРµРЅСЊС€СѓСЋ Р°РєС‚РёРІРЅРѕСЃС‚СЊ РІ
+-- РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРё СЃРѕС†РёР°Р»СЊРЅРѕР№ СЃРµС‚Рё.
 SELECT user_id FROM profiles WHERE NOT user_id 
 	IN(SELECT user_id FROM likes GROUP BY user_id) 
 	ORDER BY last_login LIMIT 10;
--- Нескоолько неадекватная получается выборка, но по сути выдает тех же 
--- пользователей с наименьшей активностью
+-- РќРµСЃРєРѕРѕР»СЊРєРѕ РЅРµР°РґРµРєРІР°С‚РЅР°СЏ РїРѕР»СѓС‡Р°РµС‚СЃСЏ РІС‹Р±РѕСЂРєР°, РЅРѕ РїРѕ СЃСѓС‚Рё РІС‹РґР°РµС‚ С‚РµС… Р¶Рµ 
+-- РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№ СЃ РЅР°РёРјРµРЅСЊС€РµР№ Р°РєС‚РёРІРЅРѕСЃС‚СЊСЋ
 SELECT * FROM users WHERE id IN
 	(SELECT user_id FROM profiles WHERE NOT user_id 
 	IN(SELECT user_id FROM likes GROUP BY user_id) 
